@@ -1,0 +1,89 @@
+import threading
+import random
+import time
+
+class CircularQueue:
+    def __init__(self, size):
+        self.size = size
+        self.queue = [None for i in range(size)]
+        self.head = self.tail = -1
+        self._lock = threading.Lock()
+
+    def lock(self):
+        self._lock.acquire()
+
+    def unlock(self):
+        self._lock.release()
+
+    def enqueue(self, data):
+
+            q.lock()
+            if(self.head == -1 and self.tail == -1):    # queue is empty
+                self.head = 0
+                self.tail = 0
+                self.queue[self.tail] = data
+                print("Added",data,"to queue")
+                q.unlock()
+                return
+    
+            if(((self.tail + 1)%self.size) == self.head):     # queue is full
+                print("Attempted to enqueue will queue was full")
+                q.unlock()
+                time.sleep(1)
+                return
+                
+
+            else:
+                self.tail = (self.tail + 1) % self.size
+                self.queue[self.tail] = data
+                print("Added",data,"to queue ")
+                q.unlock()
+                return
+        
+    
+    def dequeue(self):
+            q.lock()
+            if(self.head == -1 and self.tail == -1):    # queue is empty
+                q.unlock()
+                time.sleep(1)
+                return ("Attempted to dequeue while queue was empty")
+
+            if(self.head == self.tail and self.head != -1):     # if only 1 item in queue
+                temp = self.queue[self.head]
+                self.queue[self.head] = None
+                self.head = -1
+                self.tail = -1
+                q.unlock()
+                return temp 
+            
+            else:
+                temp = self.queue[self.head]       
+                self.queue[self.head] = None
+                self.head = (self.head + 1) % self.size
+                q.unlock()
+                return temp
+
+
+
+
+def producer():
+    while True:
+        seconds = random.randint(0,10)
+        time.sleep(seconds)
+        q.enqueue(seconds)
+
+
+def consumer():
+    while True:
+        seconds = random.randint(0,10)
+        time.sleep(seconds)
+        print(q.dequeue())
+
+if __name__ == '__main__':
+    q = CircularQueue(5)
+    t1 = threading.Thread(target=producer)
+    t2 = threading.Thread(target=consumer)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
